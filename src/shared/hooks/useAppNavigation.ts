@@ -10,6 +10,7 @@ import { useState, useCallback } from 'react';
 export enum AppScreen {
   SPLASH = 'SPLASH',
   HOME = 'HOME',
+  CART = 'CART',
 }
 
 /**
@@ -24,6 +25,13 @@ export const useAppNavigation = () => {
    */
   const navigateToHome = useCallback(() => {
     setCurrentScreen(AppScreen.HOME);
+  }, []);
+
+  /**
+   * Navega al Carrito de Compras
+   */
+  const navigateToCart = useCallback(() => {
+    setCurrentScreen(AppScreen.CART);
   }, []);
 
   /**
@@ -43,6 +51,7 @@ export const useAppNavigation = () => {
   return {
     currentScreen,
     navigateToHome,
+    navigateToCart,
     navigateToSplash,
     isCurrentScreen,
   };

@@ -11,9 +11,11 @@ import {
   Dimensions,
   TouchableOpacity,
 } from 'react-native';
+import { useDispatch } from 'react-redux';
 import { Product } from '../../shared/types';
 import { formatPrice } from '../../shared/utils';
 import { colors, BaseProps } from './BaseComponent';
+import { cartActions } from '../../state/actions';
 
 interface ProductCardProps extends BaseProps {
   product: Product;
@@ -32,10 +34,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   style,
   testID,
 }) => {
+  const dispatch = useDispatch();
+
   const handlePress = () => {
     if (onPress) {
       onPress(product);
     }
+  };
+
+  const handleAddToCart = () => {
+    dispatch(cartActions.addItem(product, 1));
   };
 
   return (
@@ -67,6 +75,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {formatPrice(product.price)}
           </Text>
         </View>
+
+        <TouchableOpacity
+          style={styles.addToCartButton}
+          onPress={handleAddToCart}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.addToCartButtonText}>
+            🛒 Agregar al Carrito
+          </Text>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
@@ -122,6 +140,19 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: '700',
     color: colors.primary,
+  },
+  addToCartButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  addToCartButtonText: {
+    color: colors.background,
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

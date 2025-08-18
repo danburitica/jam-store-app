@@ -14,6 +14,7 @@ import { Provider } from 'react-redux';
 import { store } from './src/application/store';
 import { HomeScreen } from './src/ui/screens/HomeScreen';
 import { SplashScreen } from './src/ui/screens/SplashScreen';
+import { CartScreen } from './src/ui/screens/CartScreen';
 import { useAppNavigation, AppScreen } from './src/shared/hooks/useAppNavigation';
 
 function App() {
@@ -30,13 +31,17 @@ function App() {
 }
 
 function AppContent() {
-  const { currentScreen, navigateToHome } = useAppNavigation();
+  const { currentScreen, navigateToHome, navigateToCart } = useAppNavigation();
 
   if (currentScreen === AppScreen.SPLASH) {
     return <SplashScreen onFinish={navigateToHome} />;
   }
 
-  return <HomeScreen />;
+  if (currentScreen === AppScreen.CART) {
+    return <CartScreen onBackToHome={navigateToHome} />;
+  }
+
+  return <HomeScreen onNavigateToCart={navigateToCart} />;
 }
 
 export default App;

@@ -11,6 +11,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
   RefreshControl,
+  TouchableOpacity,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { Product } from '../../shared/types';
@@ -21,18 +22,24 @@ import {
   selectProducts,
   selectProductsLoading,
   selectProductsError,
+  selectCartItemsCount,
 } from '../../state/selectors';
 import { MockProductRepository } from '../../infrastructure/api/MockProductsData';
+
+interface HomeScreenProps {
+  onNavigateToCart: () => void;
+}
 
 /**
  * Pantalla principal que muestra la lista de instrumentos musicales
  * Sin navegación a detalle, solo visualización directa
  */
-export const HomeScreen: React.FC = () => {
+export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigateToCart }) => {
   const dispatch = useDispatch();
   const products = useSelector(selectProducts);
   const isLoading = useSelector(selectProductsLoading);
   const error = useSelector(selectProductsError);
+  const cartItemsCount = useSelector(selectCartItemsCount);
 
   // Instancia del repositorio mock
   const productRepository = new MockProductRepository();
@@ -111,8 +118,27 @@ export const HomeScreen: React.FC = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>🎵 Jam Store</Text>
-        <Text style={styles.subtitle}>Instrumentos Musicales</Text>
+        <View style={styles.headerContent}>
+          <View style={styles.titleContainer}>
+            <Text style={styles.title}>🎵 Jam Store</Text>
+            <Text style={styles.subtitle}>Instrumentos Musicales</Text>
+          </View>
+          
+          <TouchableOpacity
+            style={styles.cartButton}
+            onPress={onNavigateToCart}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.cartIcon}>🛒</Text>
+            {cartItemsCount > 0 && (
+              <View style={styles.cartBadge}>
+                <Text style={styles.cartBadgeText}>
+                  {cartItemsCount > 99 ? '99+' : cartItemsCount}
+                </Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
@@ -153,17 +179,51 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  titleContainer: {
+    flex: 1,
+    alignItems: 'center',
+  },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: colors.text,
-    textAlign: 'center',
     marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
     color: colors.textSecondary,
-    textAlign: 'center',
+  },
+  cartButton: {
+    position: 'relative',
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: colors.surface,
+  },
+  cartIcon: {
+    fontSize: 24,
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: 0,
+    right: 0,
+    backgroundColor: colors.error,
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: colors.background,
+  },
+  cartBadgeText: {
+    color: colors.background,
+    fontSize: 12,
+    fontWeight: 'bold',
   },
   listContainer: {
     paddingVertical: 8,
