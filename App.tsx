@@ -13,6 +13,8 @@ import {
 import { Provider } from 'react-redux';
 import { store } from './src/application/store';
 import { HomeScreen } from './src/ui/screens/HomeScreen';
+import { SplashScreen } from './src/ui/screens/SplashScreen';
+import { useAppNavigation, AppScreen } from './src/shared/hooks/useAppNavigation';
 
 function App() {
   const isDarkMode = useColorScheme() === 'dark';
@@ -28,6 +30,12 @@ function App() {
 }
 
 function AppContent() {
+  const { currentScreen, navigateToHome } = useAppNavigation();
+
+  if (currentScreen === AppScreen.SPLASH) {
+    return <SplashScreen onFinish={navigateToHome} />;
+  }
+
   return <HomeScreen />;
 }
 
