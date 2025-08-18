@@ -35,10 +35,10 @@ export class Product {
   }
 
   /**
-   * Obtiene el precio formateado como string
+   * Obtiene el precio formateado en COP
    */
   public getFormattedPrice(): string {
-    return `$${this.price.toFixed(2)}`;
+    return `$${this.price.toLocaleString('es-CO')} COP`;
   }
 
   /**

@@ -55,6 +55,7 @@ export const APP_CONFIG = {
 export const STORE_CONFIG = {
   MAX_CART_ITEMS: 10,
   MIN_PRICE: 0,
+  CURRENCY: 'COP',
   CURRENCY_SYMBOL: '$',
   DEFAULT_IMAGE: 'https://via.placeholder.com/200x200?text=Instrumento',
 } as const;

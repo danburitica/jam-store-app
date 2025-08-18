@@ -40,10 +40,10 @@ export class CartItem {
   }
 
   /**
-   * Obtiene el subtotal formateado como string
+   * Obtiene el subtotal formateado en COP
    */
   public getFormattedSubtotal(): string {
-    return `$${this.getSubtotal().toFixed(2)}`;
+    return `$${this.getSubtotal().toLocaleString('es-CO')} COP`;
   }
 
   /**

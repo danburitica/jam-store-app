@@ -10,10 +10,11 @@ export const generateId = (): string => {
 };
 
 /**
- * Formatea un precio como string con símbolo de moneda
+ * Formatea un precio en COP (Pesos Colombianos)
+ * Los precios ya vienen en COP, solo se formatea para mostrar
  */
 export const formatPrice = (price: number): string => {
-  return `$${price.toFixed(2)}`;
+  return `$${price.toLocaleString('es-CO')} COP`;
 };
 
 /**
@@ -31,7 +32,7 @@ export const debounce = <T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): ((...args: Parameters<T>) => void) => {
-  let timeout: NodeJS.Timeout;
+  let timeout: any;
   
   return (...args: Parameters<T>) => {
     clearTimeout(timeout);
