@@ -51,13 +51,11 @@ export const APP_CONFIG = {
   },
 } as const;
 
-// Categorías de instrumentos musicales
-export const INSTRUMENT_CATEGORIES = {
-  GUITARS: 'guitars',
-  PIANOS: 'pianos',
-  DRUMS: 'drums',
-  WIND: 'wind',
-  STRINGS: 'strings',
-  ELECTRONIC: 'electronic',
+// Configuración simple de la tienda
+export const STORE_CONFIG = {
+  MAX_CART_ITEMS: 10,
+  MIN_PRICE: 0,
+  CURRENCY_SYMBOL: '$',
+  DEFAULT_IMAGE: 'https://via.placeholder.com/200x200?text=Instrumento',
 } as const;
 

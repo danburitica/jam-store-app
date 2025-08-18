@@ -28,9 +28,8 @@ export class CartItem {
       throw new Error('Cart item quantity must be greater than 0');
     }
 
-    if (!this.product.hasEnoughStock(this.quantity)) {
-      throw new Error(`Not enough stock. Available: ${this.product.stock}, Requested: ${this.quantity}`);
-    }
+    // En una tienda simplificada, no validamos stock
+    // Asumimos que todos los productos están disponibles
   }
 
   /**

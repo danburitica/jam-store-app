@@ -19,15 +19,13 @@ export interface LoadingState {
   error: string | null;
 }
 
-// Tipos para la entidad Producto (ejemplo inicial)
+// Tipos para la entidad Producto (simplificada)
 export interface Product {
   id: string;
   name: string;
-  description: string;
   price: number;
-  imageUrl: string;
-  category: string;
-  stock: number;
+  description?: string;
+  image?: string;
 }
 
 // Tipos para el carrito de compras

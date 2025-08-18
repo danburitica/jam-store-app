@@ -1,57 +1,40 @@
 // ==================================================================
-// GET PRODUCTS USE CASE - CAPA APPLICATION
+// GET PRODUCTS USE CASE - CAPA APPLICATION (SIMPLIFICADA)
 // ==================================================================
 
 import { Product } from '../../domain/entities/Product';
 import { ProductRepository } from '../../domain/repositories/ProductRepository';
 
 /**
- * Caso de uso para obtener productos
- * Encapsula la lógica de aplicación para la gestión de productos
+ * Caso de uso simplificado para obtener productos
+ * Solo operaciones básicas para una tienda mínima
  */
 export class GetProductsUseCase {
   constructor(private productRepository: ProductRepository) {}
 
   /**
-   * Ejecuta el caso de uso para obtener todos los productos
+   * Ejecuta el caso de uso para obtener todos los productos disponibles
    */
   async execute(): Promise<Product[]> {
     try {
       const products = await this.productRepository.getAllProducts();
       
-      // Aquí se puede aplicar lógica de negocio adicional
-      // como filtrado, ordenamiento, etc.
-      return products.filter(product => product.isAvailable());
+      // Lógica mínima: solo retornar los productos
+      // Sin filtros complejos ni validaciones de stock
+      return products;
     } catch (error) {
       throw new Error(`Error fetching products: ${error}`);
     }
   }
 
   /**
-   * Obtiene productos por categoría
+   * Obtiene un producto específico por ID
    */
-  async executeByCategory(category: string): Promise<Product[]> {
+  async executeById(productId: string): Promise<Product | null> {
     try {
-      const products = await this.productRepository.getProductsByCategory(category);
-      return products.filter(product => product.isAvailable());
+      return await this.productRepository.getProductById(productId);
     } catch (error) {
-      throw new Error(`Error fetching products by category: ${error}`);
-    }
-  }
-
-  /**
-   * Busca productos por texto
-   */
-  async executeSearch(query: string): Promise<Product[]> {
-    try {
-      if (query.trim().length < 2) {
-        return [];
-      }
-      
-      const products = await this.productRepository.searchProducts(query);
-      return products.filter(product => product.isAvailable());
-    } catch (error) {
-      throw new Error(`Error searching products: ${error}`);
+      throw new Error(`Error fetching product by ID: ${error}`);
     }
   }
 }

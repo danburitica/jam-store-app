@@ -38,8 +38,8 @@ export class ProcessPaymentUseCase {
       // Calcular el total
       const total = this.calculateTotal(cartItems);
 
-      // Validar stock de todos los productos
-      this.validateStock(cartItems);
+      // Validar items del carrito
+      this.validateCartItems(cartItems);
 
       // Procesar el pago
       const paymentResult = await this.paymentService.processPayment(
@@ -71,12 +71,13 @@ export class ProcessPaymentUseCase {
   }
 
   /**
-   * Valida que todos los productos tengan stock suficiente
+   * Valida básica de los items del carrito
+   * En una tienda simplificada, asumimos que todos los productos están disponibles
    */
-  private validateStock(cartItems: CartItem[]): void {
+  private validateCartItems(cartItems: CartItem[]): void {
     for (const item of cartItems) {
-      if (!item.product.hasEnoughStock(item.quantity)) {
-        throw new Error(`Insufficient stock for product: ${item.product.name}`);
+      if (item.quantity <= 0) {
+        throw new Error(`Invalid quantity for product: ${item.product.name}`);
       }
     }
   }
@@ -95,11 +96,9 @@ export class ProcessPaymentUseCase {
         product: {
           id: item.product.id,
           name: item.product.name,
-          description: item.product.description,
           price: item.product.price,
-          imageUrl: item.product.imageUrl,
-          category: item.product.category,
-          stock: item.product.stock,
+          description: item.product.description,
+          image: item.product.image,
         },
         quantity: item.quantity,
       })),
