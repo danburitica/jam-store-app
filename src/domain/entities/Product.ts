@@ -1,26 +1,24 @@
 // ==================================================================
-// PRODUCT ENTITY - CAPA DOMAIN
+// PRODUCT ENTITY - CAPA DOMAIN (SIMPLIFICADA)
 // ==================================================================
 
 /**
- * Entidad Product que representa un instrumento musical en el dominio
- * Esta clase encapsula las reglas de negocio relacionadas con los productos
+ * Entidad Product que representa un instrumento musical
+ * Versión simplificada sin categorías ni complejidad innecesaria
  */
 export class Product {
   constructor(
     public readonly id: string,
     public readonly name: string,
-    public readonly description: string,
     public readonly price: number,
-    public readonly imageUrl: string,
-    public readonly category: string,
-    public readonly stock: number
+    public readonly description?: string,
+    public readonly image?: string
   ) {
     this.validateProduct();
   }
 
   /**
-   * Valida que los datos del producto sean correctos
+   * Valida que los datos esenciales del producto sean correctos
    */
   private validateProduct(): void {
     if (!this.id || this.id.trim() === '') {
@@ -34,46 +32,27 @@ export class Product {
     if (this.price < 0) {
       throw new Error('Product price cannot be negative');
     }
-
-    if (this.stock < 0) {
-      throw new Error('Product stock cannot be negative');
-    }
   }
 
   /**
-   * Verifica si el producto está disponible en stock
-   */
-  public isAvailable(): boolean {
-    return this.stock > 0;
-  }
-
-  /**
-   * Verifica si hay suficiente stock para una cantidad específica
-   */
-  public hasEnoughStock(quantity: number): boolean {
-    return this.stock >= quantity;
-  }
-
-  /**
-   * Obtiene el precio formateado como string
+   * Obtiene el precio formateado en COP
    */
   public getFormattedPrice(): string {
-    return `$${this.price.toFixed(2)}`;
+    return `$${this.price.toLocaleString('es-CO')} COP`;
   }
 
   /**
-   * Crea una copia del producto con stock actualizado
+   * Obtiene la descripción o un texto por defecto
    */
-  public updateStock(newStock: number): Product {
-    return new Product(
-      this.id,
-      this.name,
-      this.description,
-      this.price,
-      this.imageUrl,
-      this.category,
-      newStock
-    );
+  public getDescription(): string {
+    return this.description || 'Instrumento musical disponible';
+  }
+
+  /**
+   * Verifica si el producto tiene imagen
+   */
+  public hasImage(): boolean {
+    return !!this.image && this.image.trim() !== '';
   }
 }
 

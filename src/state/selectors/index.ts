@@ -21,9 +21,6 @@ export const selectProductsError = (state: RootState): string | null =>
 export const selectProductById = (productId: string) => (state: RootState): Product | undefined =>
   state.products.items.find(product => product.id === productId);
 
-export const selectProductsByCategory = (category: string) => (state: RootState): Product[] =>
-  state.products.items.filter(product => product.category === category);
-
 // ==================================================================
 // CART SELECTORS
 // ==================================================================

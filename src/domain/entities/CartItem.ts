@@ -28,9 +28,8 @@ export class CartItem {
       throw new Error('Cart item quantity must be greater than 0');
     }
 
-    if (!this.product.hasEnoughStock(this.quantity)) {
-      throw new Error(`Not enough stock. Available: ${this.product.stock}, Requested: ${this.quantity}`);
-    }
+    // En una tienda simplificada, no validamos stock
+    // Asumimos que todos los productos están disponibles
   }
 
   /**
@@ -41,10 +40,10 @@ export class CartItem {
   }
 
   /**
-   * Obtiene el subtotal formateado como string
+   * Obtiene el subtotal formateado en COP
    */
   public getFormattedSubtotal(): string {
-    return `$${this.getSubtotal().toFixed(2)}`;
+    return `$${this.getSubtotal().toLocaleString('es-CO')} COP`;
   }
 
   /**
