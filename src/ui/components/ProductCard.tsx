@@ -156,33 +156,35 @@ const styles = StyleSheet.create({
   },
 });
 
-// Estilos responsivos para diferentes tamaños de pantalla
-const responsiveStyles = StyleSheet.create({
-  // Para pantallas pequeñas como iPhone SE
-  smallScreen: {
-    container: {
-      marginHorizontal: 12,
-    },
-    imageContainer: {
-      height: 160,
-    },
-    infoContainer: {
-      padding: 12,
-      minHeight: 100,
-    },
-    name: {
-      fontSize: 16,
-    },
-    description: {
-      fontSize: 13,
-    },
-    price: {
-      fontSize: 18,
-    },
+// Estilos responsivos para pantallas pequeñas (iPhone SE)
+const smallScreenStyles = screenWidth <= 375 ? {
+  container: {
+    marginHorizontal: 12,
   },
-});
+  imageContainer: {
+    height: 160,
+  },
+  infoContainer: {
+    padding: 12,
+    minHeight: 100,
+  },
+  name: {
+    fontSize: 16,
+  },
+  description: {
+    fontSize: 13,
+  },
+  price: {
+    fontSize: 18,
+  },
+} : {};
 
-// Aplicar estilos responsivos basados en el ancho de pantalla
-if (screenWidth <= 375) { // iPhone SE y dispositivos similares
-  Object.assign(styles, responsiveStyles.smallScreen);
+// Aplicar estilos responsivos si es pantalla pequeña
+if (screenWidth <= 375) {
+  Object.assign(styles.container, smallScreenStyles.container);
+  Object.assign(styles.imageContainer, smallScreenStyles.imageContainer);
+  Object.assign(styles.infoContainer, smallScreenStyles.infoContainer);
+  Object.assign(styles.name, smallScreenStyles.name);
+  Object.assign(styles.description, smallScreenStyles.description);
+  Object.assign(styles.price, smallScreenStyles.price);
 }

@@ -2,7 +2,7 @@
 // CART SCREEN - CAPA UI
 // ==================================================================
 
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -23,6 +23,7 @@ import { cartActions } from '../../state/actions';
 import { CartItem } from '../../shared/types';
 import { formatPrice } from '../../shared/utils';
 import { colors } from '../components/BaseComponent';
+import { PaymentBackdrop } from '../components/PaymentBackdrop';
 
 interface CartScreenProps {
   onBackToHome: () => void;
@@ -39,6 +40,8 @@ export const CartScreen: React.FC<CartScreenProps> = ({ onBackToHome }) => {
   const cartItems = useSelector(selectCartItems);
   const cartTotal = useSelector(selectCartTotal);
   const itemsCount = useSelector(selectCartItemsCount);
+  
+  const [showPaymentBackdrop, setShowPaymentBackdrop] = useState(false);
 
   /**
    * Aumenta la cantidad de un producto en el carrito
@@ -167,16 +170,20 @@ export const CartScreen: React.FC<CartScreenProps> = ({ onBackToHome }) => {
         
         <TouchableOpacity
           style={styles.payButton}
-          onPress={() => {
-            // Por ahora no hace nada, como se solicitó
-            console.log('Botón de pago presionado - Sin funcionalidad por ahora');
-          }}
+          onPress={() => setShowPaymentBackdrop(true)}
         >
           <Text style={styles.payButtonText}>
             💳 Paga con Tarjeta de Crédito
           </Text>
         </TouchableOpacity>
       </View>
+
+      {/* Backdrop de pago */}
+      <PaymentBackdrop
+        visible={showPaymentBackdrop}
+        onClose={() => setShowPaymentBackdrop(false)}
+        totalAmount={cartTotal}
+      />
     </SafeAreaView>
   );
 };
