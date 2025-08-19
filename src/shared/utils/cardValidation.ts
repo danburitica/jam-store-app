@@ -176,3 +176,33 @@ export const INSTALLMENT_OPTIONS = [
   { label: '18 cuotas', value: 18 },
   { label: '24 cuotas', value: 24 },
 ] as const;
+
+/**
+ * Enmascara un número de tarjeta mostrando solo los últimos 4 dígitos
+ */
+export const maskCardNumber = (cardNumber: string): string => {
+  const cleanNumber = cardNumber.replace(/\s+/g, '');
+  if (cleanNumber.length < 4) {
+    return cardNumber;
+  }
+  
+  const lastFour = cleanNumber.slice(-4);
+  const maskedPart = '**** **** ****';
+  return `${maskedPart} ${lastFour}`;
+};
+
+/**
+ * Obtiene el label del tipo de documento
+ */
+export const getDocumentTypeLabel = (documentType: string): string => {
+  const docType = COLOMBIA_DOCUMENT_TYPES.find(type => type.value === documentType);
+  return docType ? docType.label : documentType;
+};
+
+/**
+ * Obtiene el label del número de cuotas
+ */
+export const getInstallmentLabel = (installments: number): string => {
+  const installmentOption = INSTALLMENT_OPTIONS.find(option => option.value === installments);
+  return installmentOption ? installmentOption.label : `${installments} cuotas`;
+};

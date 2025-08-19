@@ -14,7 +14,10 @@ import {
   Dimensions,
   Alert,
 } from 'react-native';
+import { useSelector } from 'react-redux';
 import { colors } from './BaseComponent';
+import { selectCartItems, selectCartTotal } from '../../state/selectors';
+import { formatPrice } from '../../shared/utils';
 import {
   detectCardType,
   formatCardNumber,
@@ -24,6 +27,9 @@ import {
   validateCVC,
   validateCardholderName,
   validateDocumentNumber,
+  maskCardNumber,
+  getDocumentTypeLabel,
+  getInstallmentLabel,
   COLOMBIA_DOCUMENT_TYPES,
   INSTALLMENT_OPTIONS,
 } from '../../shared/utils/cardValidation';
@@ -31,7 +37,11 @@ import {
 interface PaymentBackdropProps {
   visible: boolean;
   onClose: () => void;
-  totalAmount: number;
+}
+
+enum PaymentStep {
+  FORM = 'FORM',
+  SUMMARY = 'SUMMARY',
 }
 
 interface FormData {
@@ -54,6 +64,10 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
   visible,
   onClose,
 }) => {
+  const cartItems = useSelector(selectCartItems);
+  const cartTotal = useSelector(selectCartTotal);
+
+  const [currentStep, setCurrentStep] = useState<PaymentStep>(PaymentStep.FORM);
   const [formData, setFormData] = useState<FormData>({
     cardNumber: '',
     expiryDate: '',
@@ -104,17 +118,31 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
   };
 
   /**
-   * Maneja el envío del formulario
+   * Maneja el envío del formulario y navega al resumen
    */
   const handleSubmit = () => {
     if (isFormValid) {
-      // Por ahora no hace nada, como se solicitó
-      Alert.alert(
-        'Datos capturados',
-        'Los datos de la tarjeta han sido validados correctamente. Funcionalidad de pago pendiente de implementar.',
-        [{ text: 'OK', onPress: onClose }]
-      );
+      setCurrentStep(PaymentStep.SUMMARY);
     }
+  };
+
+  /**
+   * Maneja el botón de pagar (sin funcionalidad por ahora)
+   */
+  const handlePay = () => {
+    Alert.alert(
+      'Pago pendiente',
+      'Funcionalidad de pago pendiente de implementar.',
+      [{ text: 'OK' }]
+    );
+  };
+
+  /**
+   * Reinicia el backdrop al cerrarlo
+   */
+  const handleClose = () => {
+    setCurrentStep(PaymentStep.FORM);
+    onClose();
   };
 
   /**
@@ -149,27 +177,95 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
     </View>
   );
 
+  /**
+   * Renderiza el resumen de pago
+   */
+  const renderPaymentSummary = () => (
+    <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+      {/* Datos del comprador */}
+      <View style={styles.summarySection}>
+        <Text style={styles.sectionTitle}>👤 Datos del comprador</Text>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Nombre:</Text>
+          <Text style={styles.summaryValue}>{formData.cardholderName}</Text>
+        </View>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Identificación:</Text>
+          <Text style={styles.summaryValue}>
+            {getDocumentTypeLabel(formData.documentType)} {formData.documentNumber}
+          </Text>
+        </View>
+      </View>
+
+      {/* Datos de la tarjeta */}
+      <View style={styles.summarySection}>
+        <Text style={styles.sectionTitle}>💳 Tarjeta de crédito</Text>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Número:</Text>
+          <Text style={styles.summaryValue}>{maskCardNumber(formData.cardNumber)}</Text>
+        </View>
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Cuotas:</Text>
+          <Text style={styles.summaryValue}>{getInstallmentLabel(formData.installments)}</Text>
+        </View>
+      </View>
+
+      {/* Productos del carrito */}
+      <View style={styles.summarySection}>
+        <Text style={styles.sectionTitle}>🛒 Tu pedido</Text>
+        {cartItems.map((item, index) => (
+          <View key={`${item.product.id}-${index}`} style={styles.productRow}>
+            <View style={styles.productInfo}>
+              <Text style={styles.productName} numberOfLines={2}>
+                {item.product.name}
+              </Text>
+              <Text style={styles.productQuantity}>Cantidad: {item.quantity}</Text>
+            </View>
+            <Text style={styles.productPrice}>
+              {formatPrice(item.product.price * item.quantity)}
+            </Text>
+          </View>
+        ))}
+        
+        {/* Total */}
+        <View style={styles.totalRow}>
+          <Text style={styles.totalLabel}>Total a pagar:</Text>
+          <Text style={styles.totalValue}>{formatPrice(cartTotal)}</Text>
+        </View>
+      </View>
+
+      {/* Botón de pagar */}
+      <TouchableOpacity style={styles.payButton} onPress={handlePay}>
+        <Text style={styles.payButtonText}>💰 Pagar</Text>
+      </TouchableOpacity>
+    </ScrollView>
+  );
+
   if (!visible) return null;
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="fade"
-      onRequestClose={onClose}
-    >
-      <View style={styles.backdrop}>
-        <View style={styles.container}>
-          {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>💳 Datos de Pago</Text>
-            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-              <Text style={styles.closeButtonText}>✕</Text>
-            </TouchableOpacity>
-          </View>
+          <Modal
+        visible={visible}
+        transparent
+        animationType="fade"
+        onRequestClose={handleClose}
+      >
+        <View style={styles.backdrop}>
+          <View style={styles.container}>
+            {/* Header */}
+            <View style={styles.header}>
+              <Text style={styles.title}>
+                {currentStep === PaymentStep.FORM ? '💳 Datos de Pago' : '🧾 Resumen de Pago'}
+              </Text>
+              <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+                <Text style={styles.closeButtonText}>✕</Text>
+              </TouchableOpacity>
+            </View>
 
-          <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
-            {/* Número de tarjeta */}
+            {/* Contenido dinámico según el paso */}
+            {currentStep === PaymentStep.FORM ? (
+              <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+                {/* Número de tarjeta */}
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>Número de tarjeta</Text>
               <View style={styles.cardNumberContainer}>
@@ -311,17 +407,20 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
               )}
             </View>
 
-            {/* Botón de continuar */}
-            <TouchableOpacity
-              style={[styles.submitButton, !isFormValid && styles.submitButtonDisabled]}
-              onPress={handleSubmit}
-              disabled={!isFormValid}
-            >
-              <Text style={[styles.submitButtonText, !isFormValid && styles.submitButtonTextDisabled]}>
-                Continuar con el pago
-              </Text>
-            </TouchableOpacity>
-          </ScrollView>
+                {/* Botón de continuar */}
+                <TouchableOpacity
+                  style={[styles.submitButton, !isFormValid && styles.submitButtonDisabled]}
+                  onPress={handleSubmit}
+                  disabled={!isFormValid}
+                >
+                  <Text style={[styles.submitButtonText, !isFormValid && styles.submitButtonTextDisabled]}>
+                    Continuar con el pago
+                  </Text>
+                </TouchableOpacity>
+              </ScrollView>
+            ) : (
+              renderPaymentSummary()
+            )}
         </View>
       </View>
     </Modal>
@@ -471,6 +570,98 @@ const styles = StyleSheet.create({
   },
   submitButtonTextDisabled: {
     color: colors.textSecondary,
+  },
+  // Estilos del resumen de pago
+  summarySection: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  sectionTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 12,
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  summaryLabel: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  summaryValue: {
+    fontSize: 14,
+    color: colors.text,
+    fontWeight: '500',
+    flex: 2,
+    textAlign: 'right',
+  },
+  productRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.surface,
+  },
+  productInfo: {
+    flex: 1,
+    marginRight: 12,
+  },
+  productName: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.text,
+    marginBottom: 4,
+  },
+  productQuantity: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  productPrice: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.primary,
+  },
+  totalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 2,
+    borderTopColor: colors.primary,
+  },
+  totalLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  totalValue: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  payButton: {
+    backgroundColor: colors.success,
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 24,
+    marginBottom: 20,
+  },
+  payButtonText: {
+    color: colors.background,
+    fontSize: 18,
+    fontWeight: '600',
   },
 });
 
