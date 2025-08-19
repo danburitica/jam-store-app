@@ -182,6 +182,7 @@ export const CartScreen: React.FC<CartScreenProps> = ({ onBackToHome }) => {
       <PaymentBackdrop
         visible={showPaymentBackdrop}
         onClose={() => setShowPaymentBackdrop(false)}
+        onBackToHome={onBackToHome}
       />
     </SafeAreaView>
   );

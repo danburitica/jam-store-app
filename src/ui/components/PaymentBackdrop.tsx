@@ -12,12 +12,13 @@ import {
   Modal,
   ScrollView,
   Dimensions,
-  Alert,
+  ActivityIndicator,
 } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { colors } from './BaseComponent';
 import { selectCartItems, selectCartTotal } from '../../state/selectors';
 import { formatPrice } from '../../shared/utils';
+import { cartActions } from '../../state/actions';
 import {
   detectCardType,
   formatCardNumber,
@@ -37,11 +38,19 @@ import {
 interface PaymentBackdropProps {
   visible: boolean;
   onClose: () => void;
+  onBackToHome: () => void;
 }
 
 enum PaymentStep {
   FORM = 'FORM',
   SUMMARY = 'SUMMARY',
+  PROCESSING = 'PROCESSING',
+  RESULT = 'RESULT',
+}
+
+enum PaymentResult {
+  SUCCESS = 'SUCCESS',
+  FAILED = 'FAILED',
 }
 
 interface FormData {
@@ -63,11 +72,14 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
   visible,
   onClose,
+  onBackToHome,
 }) => {
+  const dispatch = useDispatch();
   const cartItems = useSelector(selectCartItems);
   const cartTotal = useSelector(selectCartTotal);
 
   const [currentStep, setCurrentStep] = useState<PaymentStep>(PaymentStep.FORM);
+  const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
   const [formData, setFormData] = useState<FormData>({
     cardNumber: '',
     expiryDate: '',
@@ -127,14 +139,45 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
   };
 
   /**
-   * Maneja el botón de pagar (sin funcionalidad por ahora)
+   * Simula el procesamiento del pago
    */
-  const handlePay = () => {
-    Alert.alert(
-      'Pago pendiente',
-      'Funcionalidad de pago pendiente de implementar.',
-      [{ text: 'OK' }]
-    );
+  const handlePay = async () => {
+    try {
+      // Cambiar a estado de procesamiento
+      setCurrentStep(PaymentStep.PROCESSING);
+      
+      // Simular llamado a API con delay aleatorio (2-4 segundos)
+      const delay = Math.random() * 2000 + 2000; // 2-4 segundos
+      
+      await new Promise<void>(resolve => setTimeout(() => resolve(), delay));
+      
+      // Simular resultado aleatorio (80% éxito, 20% fallo)
+      const isSuccess = Math.random() > 0.2;
+      
+      // Establecer el resultado sin limpiar el carrito todavía
+      setPaymentResult(isSuccess ? PaymentResult.SUCCESS : PaymentResult.FAILED);
+      
+      // Mostrar resultado
+      setCurrentStep(PaymentStep.RESULT);
+    } catch (error) {
+      // En caso de error, mostrar fallo
+      setPaymentResult(PaymentResult.FAILED);
+      setCurrentStep(PaymentStep.RESULT);
+    }
+  };
+
+  /**
+   * Maneja el botón "Volver al Home"
+   */
+  const handleBackToHome = () => {
+    // Limpiar el carrito solo si el pago fue exitoso
+    if (paymentResult === PaymentResult.SUCCESS) {
+      dispatch(cartActions.clearCart());
+    }
+    
+    // Cerrar backdrop y navegar al home
+    handleClose();
+    onBackToHome();
   };
 
   /**
@@ -142,6 +185,7 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
    */
   const handleClose = () => {
     setCurrentStep(PaymentStep.FORM);
+    setPaymentResult(null);
     onClose();
   };
 
@@ -178,10 +222,64 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
   );
 
   /**
+   * Renderiza el estado de procesamiento
+   */
+  const renderProcessing = () => (
+    <View style={styles.processingContainer}>
+      <ActivityIndicator size="large" color={colors.primary} />
+      <Text style={styles.processingText}>Procesando tu pago...</Text>
+      <Text style={styles.processingSubtext}>
+        Por favor espera mientras verificamos tu información
+      </Text>
+    </View>
+  );
+
+  /**
+   * Renderiza el resultado del pago
+   */
+  const renderPaymentResult = () => (
+    <View style={styles.resultContainer}>
+      {paymentResult === PaymentResult.SUCCESS ? (
+        <>
+          <View style={styles.successIcon}>
+            <Text style={styles.successIconText}>✅</Text>
+          </View>
+          <Text style={styles.successTitle}>¡Pago exitoso!</Text>
+          <Text style={styles.successSubtitle}>
+            Tu compra ha sido procesada correctamente
+          </Text>
+          <View style={styles.successDetails}>
+            <Text style={styles.successDetailsText}>
+              Total pagado: {formatPrice(cartTotal)}
+            </Text>
+            <Text style={styles.successDetailsText}>
+              Cuotas: {getInstallmentLabel(formData.installments)}
+            </Text>
+          </View>
+        </>
+      ) : (
+        <>
+          <View style={styles.errorIcon}>
+            <Text style={styles.errorIconText}>❌</Text>
+          </View>
+          <Text style={styles.errorTitle}>El pago no se pudo procesar</Text>
+          <Text style={styles.errorSubtitle}>
+            Verifica tus datos e intenta nuevamente
+          </Text>
+        </>
+      )}
+      
+      <TouchableOpacity style={styles.backToHomeButton} onPress={handleBackToHome}>
+        <Text style={styles.backToHomeButtonText}>🏠 Regresar al Home</Text>
+      </TouchableOpacity>
+    </View>
+  );
+
+  /**
    * Renderiza el resumen de pago
    */
   const renderPaymentSummary = () => (
-    <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+    <View>
       {/* Datos del comprador */}
       <View style={styles.summarySection}>
         <Text style={styles.sectionTitle}>👤 Datos del comprador</Text>
@@ -238,33 +336,44 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
       <TouchableOpacity style={styles.payButton} onPress={handlePay}>
         <Text style={styles.payButtonText}>💰 Pagar</Text>
       </TouchableOpacity>
-    </ScrollView>
+    </View>
   );
 
   if (!visible) return null;
 
   return (
-          <Modal
-        visible={visible}
-        transparent
-        animationType="fade"
-        onRequestClose={handleClose}
-      >
-        <View style={styles.backdrop}>
-          <View style={styles.container}>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.title}>
-                {currentStep === PaymentStep.FORM ? '💳 Datos de Pago' : '🧾 Resumen de Pago'}
-              </Text>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={() => {
+        // Solo permitir cerrar si no está procesando o mostrando resultado
+        if (currentStep !== PaymentStep.PROCESSING && currentStep !== PaymentStep.RESULT) {
+          handleClose();
+        }
+      }}
+    >
+      <View style={styles.backdrop}>
+        <View style={styles.container}>
+          {/* Header fijo */}
+          <View style={styles.header}>
+            <Text style={styles.title}>
+              {currentStep === PaymentStep.FORM && '💳 Datos de Pago'}
+              {currentStep === PaymentStep.SUMMARY && '🧾 Resumen de Pago'}
+              {currentStep === PaymentStep.PROCESSING && '⏳ Procesando Pago'}
+              {currentStep === PaymentStep.RESULT && '📋 Resultado'}
+            </Text>
+            {currentStep !== PaymentStep.PROCESSING && currentStep !== PaymentStep.RESULT && (
               <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
                 <Text style={styles.closeButtonText}>✕</Text>
               </TouchableOpacity>
-            </View>
+            )}
+          </View>
 
-            {/* Contenido dinámico según el paso */}
+          {/* Contenido scrollable */}
+          <View style={styles.content}>
             {currentStep === PaymentStep.FORM ? (
-              <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false}>
+              <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
                 {/* Número de tarjeta */}
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>Número de tarjeta</Text>
@@ -418,9 +527,16 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
                   </Text>
                 </TouchableOpacity>
               </ScrollView>
+            ) : currentStep === PaymentStep.SUMMARY ? (
+              <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+                {renderPaymentSummary()}
+              </ScrollView>
+            ) : currentStep === PaymentStep.PROCESSING ? (
+              renderProcessing()
             ) : (
-              renderPaymentSummary()
+              renderPaymentResult()
             )}
+          </View>
         </View>
       </View>
     </Modal>
@@ -437,8 +553,22 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    maxHeight: screenHeight * 0.9,
-    paddingBottom: 20,
+    height: screenWidth <= 768 ? screenHeight : screenHeight * 0.7, // 100% mobile, 70% desktop
+    minHeight: screenHeight * 0.6,
+    maxHeight: screenHeight * 0.95,
+    flexDirection: 'column',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -5,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+  content: {
+    flex: 1,
+    flexDirection: 'column',
   },
   header: {
     flexDirection: 'row',
@@ -461,7 +591,12 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
     paddingHorizontal: 20,
+    paddingVertical: 10,
+    paddingBottom: 30,
   },
   fieldContainer: {
     marginTop: 16,
@@ -663,6 +798,104 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
+  // Estilos del estado de procesamiento
+  processingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    paddingVertical: 60,
+    minHeight: 300,
+  },
+  processingText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: 24,
+    textAlign: 'center',
+  },
+  processingSubtext: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    marginTop: 12,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  // Estilos del resultado del pago
+  resultContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    paddingVertical: 40,
+    minHeight: 400,
+  },
+  successIcon: {
+    marginBottom: 24,
+  },
+  successIconText: {
+    fontSize: 64,
+  },
+  successTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.success,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  successSubtitle: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    marginBottom: 24,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  successDetails: {
+    backgroundColor: colors.surface,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 32,
+    width: '100%',
+  },
+  successDetailsText: {
+    fontSize: 14,
+    color: colors.text,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  errorIcon: {
+    marginBottom: 24,
+  },
+  errorIconText: {
+    fontSize: 64,
+  },
+  errorTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: colors.error,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  errorSubtitle: {
+    fontSize: 16,
+    color: colors.textSecondary,
+    marginBottom: 32,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
+  backToHomeButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    alignItems: 'center',
+    minWidth: 200,
+  },
+  backToHomeButtonText: {
+    color: colors.background,
+    fontSize: 18,
+    fontWeight: '600',
+  },
 });
 
 // Estilos responsivos para pantallas pequeñas
@@ -670,7 +903,8 @@ if (screenWidth <= 375) {
   Object.assign(styles, {
     container: {
       ...styles.container,
-      maxHeight: screenHeight * 0.95,
+      height: screenHeight * 0.95,
+      maxHeight: screenHeight * 0.98,
     },
     title: {
       ...styles.title,
@@ -680,6 +914,28 @@ if (screenWidth <= 375) {
       ...styles.input,
       paddingVertical: 10,
       fontSize: 15,
+    },
+    processingContainer: {
+      ...styles.processingContainer,
+      paddingHorizontal: 30,
+      minHeight: 250,
+    },
+    resultContainer: {
+      ...styles.resultContainer,
+      paddingHorizontal: 30,
+      minHeight: 350,
+    },
+    processingText: {
+      ...styles.processingText,
+      fontSize: 18,
+    },
+    successTitle: {
+      ...styles.successTitle,
+      fontSize: 22,
+    },
+    errorTitle: {
+      ...styles.errorTitle,
+      fontSize: 22,
     },
   });
 }
