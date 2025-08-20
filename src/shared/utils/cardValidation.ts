@@ -145,7 +145,7 @@ export const validateCVC = (cvc: string): boolean => {
  * Valida el nombre del titular
  */
 export const validateCardholderName = (name: string): boolean => {
-  return name.trim().length >= 2 && /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(name.trim());
+  return name.trim().length >= 5 && /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(name.trim());
 };
 
 /**
