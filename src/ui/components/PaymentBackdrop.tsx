@@ -14,6 +14,8 @@ import {
   Dimensions,
   ActivityIndicator,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { colors } from './BaseComponent';
@@ -36,7 +38,6 @@ import {
   validateEmail,
   validateDocumentNumber,
   maskCardNumber,
-  getDocumentTypeLabel,
   getInstallmentLabel,
   COLOMBIA_DOCUMENT_TYPES,
   INSTALLMENT_OPTIONS,
@@ -375,32 +376,42 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
         }
       }}
     >
-      <View style={styles.backdrop}>
-        <View style={styles.container}>
-          {/* Header fijo */}
-          <View style={[styles.header, currentStep === PaymentStep.SUMMARY && styles.headerWithBack]}>
-            {currentStep === PaymentStep.SUMMARY && (
-              <TouchableOpacity style={styles.backButton} onPress={() => setCurrentStep(PaymentStep.FORM)}>
-                <Text style={styles.backButtonText}>←</Text>
-              </TouchableOpacity>
-            )}
-            <Text style={[styles.title, currentStep === PaymentStep.SUMMARY && styles.titleCentered]}>
-              {currentStep === PaymentStep.FORM && '💳 Datos de Pago'}
-              {currentStep === PaymentStep.SUMMARY && '🧾 Resumen de Pago'}
-              {currentStep === PaymentStep.PROCESSING && '⏳ Procesando Pago'}
-              {currentStep === PaymentStep.RESULT && '📋 Resultado'}
-            </Text>
-            {currentStep !== PaymentStep.PROCESSING && currentStep !== PaymentStep.RESULT && (
-              <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
-                <Text style={styles.closeButtonText}>✕</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+      <KeyboardAvoidingView 
+        style={styles.keyboardAvoidingContainer}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      >
+        <View style={styles.backdrop}>
+          <View style={styles.container}>
+            {/* Header fijo */}
+            <View style={styles.header}>
+              {currentStep === PaymentStep.SUMMARY && (
+                <TouchableOpacity style={styles.backButton} onPress={() => setCurrentStep(PaymentStep.FORM)}>
+                  <Text style={styles.title}>← 🧾 Resumen de Pago</Text>
+                </TouchableOpacity>
+              )}
+              <Text style={styles.title}>
+                {currentStep === PaymentStep.FORM && '💳 Datos de Pago'}
+                {currentStep === PaymentStep.PROCESSING && '⏳ Procesando Pago'}
+                {currentStep === PaymentStep.RESULT && '📋 Resultado'}
+              </Text>
+              {currentStep !== PaymentStep.PROCESSING && currentStep !== PaymentStep.RESULT && (
+                <TouchableOpacity style={styles.closeButton} onPress={handleClose}>
+                  <Text style={styles.closeButtonText}>✕</Text>
+                </TouchableOpacity>
+              )}
+            </View>
 
-          {/* Contenido scrollable */}
-          <View style={styles.content}>
-            {currentStep === PaymentStep.FORM ? (
-              <ScrollView style={styles.scrollContainer} showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+            {/* Contenido scrollable con manejo de teclado */}
+            <View style={styles.content}>
+              {currentStep === PaymentStep.FORM ? (
+                <ScrollView 
+                  style={styles.scrollContainer} 
+                  showsVerticalScrollIndicator={false} 
+                  contentContainerStyle={styles.scrollContent}
+                  keyboardShouldPersistTaps="handled"
+                  nestedScrollEnabled={true}
+                >
                 {/* Número de tarjeta */}
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>Número de tarjeta</Text>
@@ -594,11 +605,15 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
           </View>
         </View>
       </View>
-    </Modal>
+        </KeyboardAvoidingView>
+      </Modal>
   );
 };
 
 const styles = StyleSheet.create({
+  keyboardAvoidingContainer: {
+    flex: 1,
+  },
   backdrop: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -648,20 +663,6 @@ const styles = StyleSheet.create({
   },
   backButton: {
     padding: 8,
-    marginRight: 8,
-  },
-  backButtonText: {
-    fontSize: 20,
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  headerWithBack: {
-    justifyContent: 'space-between',
-  },
-  titleCentered: {
-    flex: 1,
-    textAlign: 'center',
-    marginHorizontal: 16,
   },
   scrollContainer: {
     flex: 1,
