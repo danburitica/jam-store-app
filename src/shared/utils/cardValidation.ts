@@ -58,8 +58,22 @@ export const formatCardNumber = (value: string): string => {
 export const validateCardNumber = (cardNumber: string): boolean => {
   const cleanNumber = cardNumber.replace(/\s+/g, '');
   
-  if (!/^\d{13,19}$/.test(cleanNumber)) {
+  // Solo validar longitudes correctas de tarjetas: 13, 15, 16 dígitos
+  if (!/^\d{13}$|^\d{15}$|^\d{16}$/.test(cleanNumber)) {
     return false;
+  }
+  
+  // Validación específica por tipo de tarjeta
+  if (cleanNumber.startsWith('4')) {
+    // VISA: 13, 16 dígitos
+    if (cleanNumber.length !== 13 && cleanNumber.length !== 16) {
+      return false;
+    }
+  } else if (cleanNumber.startsWith('5')) {
+    // MasterCard: 16 dígitos
+    if (cleanNumber.length !== 16) {
+      return false;
+    }
   }
   
   let sum = 0;
@@ -132,6 +146,14 @@ export const validateCVC = (cvc: string): boolean => {
  */
 export const validateCardholderName = (name: string): boolean => {
   return name.trim().length >= 2 && /^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/.test(name.trim());
+};
+
+/**
+ * Valida el email
+ */
+export const validateEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email.trim());
 };
 
 /**

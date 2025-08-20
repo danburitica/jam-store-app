@@ -8,11 +8,11 @@ import {
   Text,
   FlatList,
   StyleSheet,
-  SafeAreaView,
   TouchableOpacity,
   Image,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   selectCartItems,

@@ -7,10 +7,11 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   Animated,
   Dimensions,
+  Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface SplashScreenProps {
   onFinish: () => void;
@@ -96,7 +97,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        {/* Icono Musical */}
+        {/* Logo de la aplicación */}
         <Animated.View
           style={[
             styles.iconContainer,
@@ -106,22 +107,14 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onFinish }) => {
             },
           ]}
         >
-          <Text style={styles.musicIcon}>🎵</Text>
+          <Image 
+            source={require('../../assets/images/imagotipo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
         </Animated.View>
 
-        {/* Nombre de la aplicación */}
-        <Animated.View
-          style={[
-            styles.textContainer,
-            {
-              opacity: fadeAnim,
-              transform: [{ translateY: slideAnim }],
-            },
-          ]}
-        >
-          <Text style={styles.appName}>Jam Store</Text>
-          <Text style={styles.tagline}>Instrumentos Musicales</Text>
-        </Animated.View>
+
 
         {/* Indicador de carga sutil */}
         <Animated.View
@@ -158,9 +151,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  musicIcon: {
-    fontSize: screenWidth > 375 ? 80 : 64, // Responsive
-    textAlign: 'center',
+  logo: {
+    height: screenWidth > 375 ? 200 : 160, // Responsive y más grande
+    width: screenWidth > 375 ? 400 : 320, // Responsive y más grande
   },
   textContainer: {
     alignItems: 'center',
