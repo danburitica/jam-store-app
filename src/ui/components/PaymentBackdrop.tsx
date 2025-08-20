@@ -379,7 +379,7 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
       <KeyboardAvoidingView 
         style={styles.keyboardAvoidingContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? -100 : 0}
       >
         <View style={styles.backdrop}>
           <View style={styles.container}>
@@ -408,9 +408,16 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
                 <ScrollView 
                   style={styles.scrollContainer} 
                   showsVerticalScrollIndicator={false} 
-                  contentContainerStyle={styles.scrollContent}
+                  contentContainerStyle={[
+                    styles.scrollContent,
+                    Platform.OS === 'ios' && { paddingBottom: 120 }, // Más padding en iOS para teclado
+                    Platform.OS === 'android' && { paddingBottom: 60 } // Padding reducido en Android
+                  ]}
                   keyboardShouldPersistTaps="handled"
                   nestedScrollEnabled={true}
+                  automaticallyAdjustKeyboardInsets={Platform.OS === 'ios'}
+                  keyboardDismissMode="interactive"
+                  contentInsetAdjustmentBehavior="automatic"
                 >
                 {/* Número de tarjeta */}
             <View style={styles.fieldContainer}>
@@ -603,10 +610,10 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
               renderPaymentResult()
             )}
           </View>
+                  </View>
         </View>
-      </View>
-        </KeyboardAvoidingView>
-      </Modal>
+      </KeyboardAvoidingView>
+    </Modal>
   );
 };
 
@@ -618,15 +625,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
-    paddingTop: screenWidth <= 768 ? 60 : 80, // Espaciado desde arriba
+    paddingTop: Platform.OS === 'ios' ? 80 : 60, // Más padding en iOS para espacio adecuado
   },
   container: {
     backgroundColor: colors.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    height: screenWidth <= 768 ? screenHeight * 0.85 : screenHeight * 0.65, // Reducir altura para espaciado
-    minHeight: screenHeight * 0.5,
-    maxHeight: screenHeight * 0.9,
+    height: Platform.OS === 'ios' ? screenHeight * 0.65 : screenHeight * 0.7,
+    minHeight: Platform.OS === 'ios' ? screenHeight * 0.3 : screenHeight * 0.5,
+    maxHeight: Platform.OS === 'ios' ? screenHeight * 0.75 : screenHeight * 0.8,
     flexDirection: 'column',
     shadowColor: '#000',
     shadowOffset: {
@@ -670,7 +677,8 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingHorizontal: 20,
     paddingVertical: 10,
-    paddingBottom: 30,
+    paddingBottom: Platform.OS === 'ios' ? 50 : 20, // Padding base más grande para iOS
+    flexGrow: 1, // Permite que el contenido crezca
   },
   fieldContainer: {
     marginTop: 16,
