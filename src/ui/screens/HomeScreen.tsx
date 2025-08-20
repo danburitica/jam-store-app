@@ -8,11 +8,12 @@ import {
   Text,
   FlatList,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   RefreshControl,
   TouchableOpacity,
+  Image,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useDispatch, useSelector } from 'react-redux';
 import { Product } from '../../shared/types';
 import { ProductCard } from '../components/ProductCard';
@@ -119,11 +120,19 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigateToCart }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.headerContent}>
+          {/* Isotipo a la izquierda */}
+          <Image 
+            source={require('../../assets/images/isotipo.png')}
+            style={styles.isotipo}
+            resizeMode="contain"
+          />
+          
+          {/* Título centrado */}
           <View style={styles.titleContainer}>
-            <Text style={styles.title}>🎵 Jam Store</Text>
-            <Text style={styles.subtitle}>Instrumentos Musicales</Text>
+            <Text style={styles.title}>Jam Store</Text>
           </View>
           
+          {/* Carrito a la derecha */}
           <TouchableOpacity
             style={styles.cartButton}
             onPress={onNavigateToCart}
@@ -184,6 +193,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  isotipo: {
+    height: 64, // Casi del alto del header
+    width: 64, // Cuadrado para el isotipo
+  },
   titleContainer: {
     flex: 1,
     alignItems: 'center',
@@ -195,7 +208,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   subtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: colors.textSecondary,
   },
   cartButton: {

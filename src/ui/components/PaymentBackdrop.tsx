@@ -13,12 +13,18 @@ import {
   ScrollView,
   Dimensions,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { colors } from './BaseComponent';
 import { selectCartItems, selectCartTotal } from '../../state/selectors';
 import { formatPrice } from '../../shared/utils';
 import { cartActions } from '../../state/actions';
+
+// Importar logos de tarjetas
+const visaLogo = require('../../assets/images/visa-logo.png');
+const mastercardLogo = require('../../assets/images/mastercard-logo.png');
+
 import {
   detectCardType,
   formatCardNumber,
@@ -27,6 +33,7 @@ import {
   validateExpiryDate,
   validateCVC,
   validateCardholderName,
+  validateEmail,
   validateDocumentNumber,
   maskCardNumber,
   getDocumentTypeLabel,
@@ -58,6 +65,7 @@ interface FormData {
   expiryDate: string;
   cvc: string;
   cardholderName: string;
+  email: string;
   documentType: string;
   documentNumber: string;
   installments: number;
@@ -85,6 +93,7 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
     expiryDate: '',
     cvc: '',
     cardholderName: '',
+    email: '',
     documentType: 'CC',
     documentNumber: '',
     installments: 1,
@@ -101,10 +110,11 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
   const isExpiryValid = validateExpiryDate(formData.expiryDate);
   const isCvcValid = validateCVC(formData.cvc);
   const isNameValid = validateCardholderName(formData.cardholderName);
+  const isEmailValid = validateEmail(formData.email);
   const isDocumentValid = validateDocumentNumber(formData.documentNumber, formData.documentType);
 
   // Validación general del formulario
-  const isFormValid = isCardNumberValid && isExpiryValid && isCvcValid && isNameValid && isDocumentValid;
+  const isFormValid = isCardNumberValid && isExpiryValid && isCvcValid && isNameValid && isEmailValid && isDocumentValid;
 
   /**
    * Actualiza un campo del formulario
@@ -198,13 +208,18 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
     onSelect: (value: any) => void,
     _placeholder: string
   ) => (
-    <View style={styles.dropdownContainer}>
-      {options.map((option) => (
+    <ScrollView 
+      style={styles.dropdownContainer}
+      showsVerticalScrollIndicator={false}
+      nestedScrollEnabled={true}
+    >
+      {options.map((option, index) => (
         <TouchableOpacity
           key={option.value}
           style={[
             styles.dropdownOption,
             selectedValue === option.value && styles.dropdownOptionSelected,
+            index === options.length - 1 && styles.dropdownOptionLast,
           ]}
           onPress={() => onSelect(option.value)}
         >
@@ -216,9 +231,12 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
           >
             {option.label}
           </Text>
+          {selectedValue === option.value && (
+            <Text style={styles.dropdownCheckmark}>✓</Text>
+          )}
         </TouchableOpacity>
       ))}
-    </View>
+    </ScrollView>
   );
 
   /**
@@ -288,11 +306,15 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
           <Text style={styles.summaryValue}>{formData.cardholderName}</Text>
         </View>
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Identificación:</Text>
-          <Text style={styles.summaryValue}>
-            {getDocumentTypeLabel(formData.documentType)} {formData.documentNumber}
-          </Text>
+          <Text style={styles.summaryLabel}>Email:</Text>
+          <Text style={styles.summaryValue}>{formData.email}</Text>
         </View>
+                    <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Identificación:</Text>
+              <Text style={styles.summaryValue}>
+                {formData.documentType} {formData.documentNumber}
+              </Text>
+            </View>
       </View>
 
       {/* Datos de la tarjeta */}
@@ -356,8 +378,13 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
       <View style={styles.backdrop}>
         <View style={styles.container}>
           {/* Header fijo */}
-          <View style={styles.header}>
-            <Text style={styles.title}>
+          <View style={[styles.header, currentStep === PaymentStep.SUMMARY && styles.headerWithBack]}>
+            {currentStep === PaymentStep.SUMMARY && (
+              <TouchableOpacity style={styles.backButton} onPress={() => setCurrentStep(PaymentStep.FORM)}>
+                <Text style={styles.backButtonText}>←</Text>
+              </TouchableOpacity>
+            )}
+            <Text style={[styles.title, currentStep === PaymentStep.SUMMARY && styles.titleCentered]}>
               {currentStep === PaymentStep.FORM && '💳 Datos de Pago'}
               {currentStep === PaymentStep.SUMMARY && '🧾 Resumen de Pago'}
               {currentStep === PaymentStep.PROCESSING && '⏳ Procesando Pago'}
@@ -387,7 +414,13 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
                   keyboardType="numeric"
                   maxLength={19}
                 />
-                <Text style={styles.cardTypeLogo}>{cardType.logo}</Text>
+                {cardType.name !== 'UNKNOWN' && (
+                  <Image 
+                    source={cardType.name === 'VISA' ? visaLogo : mastercardLogo}
+                    style={styles.cardTypeLogo}
+                    resizeMode="contain"
+                  />
+                )}
               </View>
               {!isCardNumberValid && formData.cardNumber.length > 0 && (
                 <Text style={styles.errorText}>Número de tarjeta inválido</Text>
@@ -446,17 +479,37 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
               )}
             </View>
 
+            {/* Email */}
+            <View style={styles.fieldContainer}>
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={[styles.input, !isEmailValid && formData.email.length > 0 && styles.inputError]}
+                value={formData.email}
+                onChangeText={(value) => updateField('email', value)}
+                placeholder="juan.perez@email.com"
+                placeholderTextColor={colors.placeholder}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+              {!isEmailValid && formData.email.length > 0 && (
+                <Text style={styles.errorText}>Email inválido</Text>
+              )}
+            </View>
+
             {/* Tipo de documento */}
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>Tipo de documento</Text>
               <TouchableOpacity
-                style={styles.selector}
+                style={[styles.selector, showDocumentTypes && styles.selectorActive]}
                 onPress={() => setShowDocumentTypes(!showDocumentTypes)}
               >
                 <Text style={styles.selectorText}>
-                  {COLOMBIA_DOCUMENT_TYPES.find(type => type.value === formData.documentType)?.label}
+                  {COLOMBIA_DOCUMENT_TYPES.find(type => type.value === formData.documentType)?.label || 'Seleccionar tipo'}
                 </Text>
-                <Text style={styles.selectorArrow}>{showDocumentTypes ? '▲' : '▼'}</Text>
+                <Text style={[styles.selectorArrow, showDocumentTypes && styles.selectorArrowActive]}>
+                  {showDocumentTypes ? '▲' : '▼'}
+                </Text>
               </TouchableOpacity>
               {showDocumentTypes && (
                 <View style={styles.dropdown}>
@@ -493,13 +546,15 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
             <View style={styles.fieldContainer}>
               <Text style={styles.label}>Número de cuotas</Text>
               <TouchableOpacity
-                style={styles.selector}
+                style={[styles.selector, showInstallments && styles.selectorActive]}
                 onPress={() => setShowInstallments(!showInstallments)}
               >
                 <Text style={styles.selectorText}>
-                  {INSTALLMENT_OPTIONS.find(option => option.value === formData.installments)?.label}
+                  {INSTALLMENT_OPTIONS.find(option => option.value === formData.installments)?.label || 'Seleccionar cuotas'}
                 </Text>
-                <Text style={styles.selectorArrow}>{showInstallments ? '▲' : '▼'}</Text>
+                <Text style={[styles.selectorArrow, showInstallments && styles.selectorArrowActive]}>
+                  {showInstallments ? '▲' : '▼'}
+                </Text>
               </TouchableOpacity>
               {showInstallments && (
                 <View style={styles.dropdown}>
@@ -548,14 +603,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
     justifyContent: 'flex-end',
+    paddingTop: screenWidth <= 768 ? 60 : 80, // Espaciado desde arriba
   },
   container: {
     backgroundColor: colors.background,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    height: screenWidth <= 768 ? screenHeight : screenHeight * 0.7, // 100% mobile, 70% desktop
-    minHeight: screenHeight * 0.6,
-    maxHeight: screenHeight * 0.95,
+    height: screenWidth <= 768 ? screenHeight * 0.85 : screenHeight * 0.65, // Reducir altura para espaciado
+    minHeight: screenHeight * 0.5,
+    maxHeight: screenHeight * 0.9,
     flexDirection: 'column',
     shadowColor: '#000',
     shadowOffset: {
@@ -589,6 +645,23 @@ const styles = StyleSheet.create({
   closeButtonText: {
     fontSize: 18,
     color: colors.textSecondary,
+  },
+  backButton: {
+    padding: 8,
+    marginRight: 8,
+  },
+  backButtonText: {
+    fontSize: 20,
+    color: colors.primary,
+    fontWeight: '600',
+  },
+  headerWithBack: {
+    justifyContent: 'space-between',
+  },
+  titleCentered: {
+    flex: 1,
+    textAlign: 'center',
+    marginHorizontal: 16,
   },
   scrollContainer: {
     flex: 1,
@@ -628,7 +701,9 @@ const styles = StyleSheet.create({
   cardTypeLogo: {
     position: 'absolute',
     right: 12,
-    fontSize: 16,
+    width: 32,
+    height: 20,
+    resizeMode: 'contain',
   },
   rowContainer: {
     flexDirection: 'row',
@@ -643,44 +718,84 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
+    borderRadius: 12,
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
     backgroundColor: colors.background,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  selectorActive: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 4,
   },
   selectorText: {
     fontSize: 16,
     color: colors.text,
+    flex: 1,
   },
   selectorArrow: {
-    fontSize: 12,
+    fontSize: 14,
     color: colors.textSecondary,
+    marginLeft: 8,
+  },
+  selectorArrowActive: {
+    color: colors.primary,
+    transform: [{ rotate: '180deg' }],
   },
   dropdown: {
-    marginTop: 4,
+    marginTop: 6,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 8,
+    borderRadius: 12,
     backgroundColor: colors.background,
     maxHeight: 200,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 6,
+    overflow: 'hidden',
   },
   dropdownContainer: {
-    paddingVertical: 4,
+    maxHeight: 180,
   },
   dropdownOption: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  dropdownOptionLast: {
+    borderBottomWidth: 0,
   },
   dropdownOptionSelected: {
     backgroundColor: colors.primary,
+    borderBottomColor: colors.primary,
   },
   dropdownOptionText: {
     fontSize: 16,
     color: colors.text,
+    flex: 1,
   },
   dropdownOptionTextSelected: {
     color: colors.background,
     fontWeight: '600',
+  },
+  dropdownCheckmark: {
+    fontSize: 16,
+    color: colors.background,
+    fontWeight: 'bold',
+    marginLeft: 8,
   },
   errorText: {
     fontSize: 12,
@@ -772,8 +887,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 12,
     paddingTop: 12,
-    borderTopWidth: 2,
-    borderTopColor: colors.primary,
   },
   totalLabel: {
     fontSize: 16,
@@ -901,10 +1014,14 @@ const styles = StyleSheet.create({
 // Estilos responsivos para pantallas pequeñas
 if (screenWidth <= 375) {
   Object.assign(styles, {
+    backdrop: {
+      ...styles.backdrop,
+      paddingTop: 40, // Menos espaciado en pantallas pequeñas
+    },
     container: {
       ...styles.container,
-      height: screenHeight * 0.95,
-      maxHeight: screenHeight * 0.98,
+      height: screenHeight * 0.8, // Reducir altura para mejor proporción
+      maxHeight: screenHeight * 0.85,
     },
     title: {
       ...styles.title,
@@ -936,6 +1053,21 @@ if (screenWidth <= 375) {
     errorTitle: {
       ...styles.errorTitle,
       fontSize: 22,
+    },
+  });
+}
+
+// Estilos responsivos para tablets
+if (screenWidth > 768 && screenWidth <= 1024) {
+  Object.assign(styles, {
+    backdrop: {
+      ...styles.backdrop,
+      paddingTop: 100, // Más espaciado en tablets
+    },
+    container: {
+      ...styles.container,
+      height: screenHeight * 0.6, // Altura reducida en tablets
+      maxHeight: screenHeight * 0.75,
     },
   });
 }
