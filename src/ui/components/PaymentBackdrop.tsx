@@ -2,7 +2,7 @@
 // PAYMENT BACKDROP COMPONENT - CAPA UI
 // ==================================================================
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,8 @@ import { colors } from './BaseComponent';
 import { selectCartItems, selectCartTotal } from '../../state/selectors';
 import { formatPrice } from '../../shared/utils';
 import { cartActions } from '../../state/actions';
+import { ProcessTransactionUseCase } from '../../application/usecases/ProcessTransactionUseCase';
+import { defaultTransactionService } from '../../infrastructure/api/TransactionService';
 
 // Importar logos de tarjetas
 const visaLogo = require('../../assets/images/visa-logo.png');
@@ -89,6 +91,7 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
 
   const [currentStep, setCurrentStep] = useState<PaymentStep>(PaymentStep.FORM);
   const [paymentResult, setPaymentResult] = useState<PaymentResult | null>(null);
+  const [transactionData, setTransactionData] = useState<any>(null);
   const [formData, setFormData] = useState<FormData>({
     cardNumber: '',
     expiryDate: '',
@@ -103,6 +106,16 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
   const [showDocumentTypes, setShowDocumentTypes] = useState(false);
   const [showInstallments, setShowInstallments] = useState(false);
 
+  // Instancia del use case
+  const processTransactionUseCase = new ProcessTransactionUseCase(defaultTransactionService);
+
+  // Debug: Monitorear cambios en el estado
+  useEffect(() => {
+    console.log('🔄 Estado actual del backdrop:', currentStep);
+    console.log('📋 Resultado del pago:', paymentResult);
+    console.log('💾 Datos de transacción:', transactionData);
+  }, [currentStep, paymentResult, transactionData]);
+
   // Detectar tipo de tarjeta
   const cardType = detectCardType(formData.cardNumber);
 
@@ -110,7 +123,7 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
   const isCardNumberValid = validateCardNumber(formData.cardNumber);
   const isExpiryValid = validateExpiryDate(formData.expiryDate);
   const isCvcValid = validateCVC(formData.cvc);
-  const isNameValid = validateCardholderName(formData.cardholderName);
+  const isNameValid = validateCardholderName(formData.cardholderName) && formData.cardholderName.trim().length >= 5;
   const isEmailValid = validateEmail(formData.email);
   const isDocumentValid = validateDocumentNumber(formData.documentNumber, formData.documentType);
 
@@ -154,26 +167,61 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
    */
   const handlePay = async () => {
     try {
+      console.log('🔄 Iniciando procesamiento de pago...');
+      
       // Cambiar a estado de procesamiento
       setCurrentStep(PaymentStep.PROCESSING);
       
-      // Simular llamado a API con delay aleatorio (2-4 segundos)
-      const delay = Math.random() * 2000 + 2000; // 2-4 segundos
+      // Preparar datos para el use case
+      const request = {
+        cardNumber: formData.cardNumber,
+        cvc: formData.cvc,
+        expiryDate: formData.expiryDate,
+        cardholderName: formData.cardholderName,
+        documentNumber: formData.documentNumber,
+        documentType: formData.documentType,
+        amount: cartTotal,
+        customerEmail: formData.email,
+        installments: formData.installments,
+      };
+
+      console.log('📋 Datos del formulario:', request);
+
+      // Procesar transacción con timeout de seguridad
+      console.log('🔄 Procesando transacción...', request);
       
-      await new Promise<void>(resolve => setTimeout(() => resolve(), delay));
+      // Timeout de seguridad (10 segundos)
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout: La transacción tardó demasiado')), 10000);
+      });
       
-      // Simular resultado aleatorio (80% éxito, 20% fallo)
-      const isSuccess = Math.random() > 0.2;
+      const result = await Promise.race([
+        processTransactionUseCase.execute(request),
+        timeoutPromise
+      ]) as any;
       
-      // Establecer el resultado sin limpiar el carrito todavía
-      setPaymentResult(isSuccess ? PaymentResult.SUCCESS : PaymentResult.FAILED);
+      console.log('📋 Resultado de transacción:', result);
       
-      // Mostrar resultado
+      if (result.success && result.transaction) {
+        console.log('✅ Transacción exitosa:', result.transaction);
+        setTransactionData(result.transaction);
+        setPaymentResult(result.transaction.status === 'APPROVED' ? PaymentResult.SUCCESS : PaymentResult.FAILED);
+      } else {
+        console.log('❌ Transacción fallida:', result.error);
+        setPaymentResult(PaymentResult.FAILED);
+        setTransactionData({ message: result.error || 'Error al procesar la transacción' });
+      }
+      
+      console.log('🔄 Cambiando a estado RESULT...');
+      // Cambiar al estado de resultado
       setCurrentStep(PaymentStep.RESULT);
+      console.log('✅ Estado cambiado a RESULT');
     } catch (error) {
-      // En caso de error, mostrar fallo
+      console.log('💥 Error en transacción:', error);
       setPaymentResult(PaymentResult.FAILED);
+      setTransactionData({ message: 'Error de conexión con el servidor' });
       setCurrentStep(PaymentStep.RESULT);
+      console.log('✅ Estado cambiado a RESULT después del error');
     }
   };
 
@@ -197,6 +245,7 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
   const handleClose = () => {
     setCurrentStep(PaymentStep.FORM);
     setPaymentResult(null);
+    setTransactionData(null);
     onClose();
   };
 
@@ -265,7 +314,7 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
           </View>
           <Text style={styles.successTitle}>¡Pago exitoso!</Text>
           <Text style={styles.successSubtitle}>
-            Tu compra ha sido procesada correctamente
+            {transactionData?.message || 'Tu compra ha sido procesada correctamente'}
           </Text>
           <View style={styles.successDetails}>
             <Text style={styles.successDetailsText}>
@@ -274,6 +323,16 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
             <Text style={styles.successDetailsText}>
               Cuotas: {getInstallmentLabel(formData.installments)}
             </Text>
+            {transactionData?.transactionId && (
+              <Text style={styles.successDetailsText}>
+                ID: {transactionData.transactionId}
+              </Text>
+            )}
+            {transactionData?.reference && (
+              <Text style={styles.successDetailsText}>
+                Referencia: {transactionData.reference}
+              </Text>
+            )}
           </View>
         </>
       ) : (
@@ -283,8 +342,20 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
           </View>
           <Text style={styles.errorTitle}>El pago no se pudo procesar</Text>
           <Text style={styles.errorSubtitle}>
-            Verifica tus datos e intenta nuevamente
+            {transactionData?.message || 'Verifica tus datos e intenta nuevamente'}
           </Text>
+          {transactionData?.status && transactionData.status !== 'APPROVED' && (
+            <View style={styles.errorDetails}>
+              <Text style={styles.errorDetailsText}>
+                Estado: {transactionData.status}
+              </Text>
+              {transactionData?.attempts && (
+                <Text style={styles.errorDetailsText}>
+                  Intentos: {transactionData.attempts}
+                </Text>
+              )}
+            </View>
+          )}
         </>
       )}
       
@@ -492,9 +563,9 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
                 placeholderTextColor={colors.placeholder}
                 autoCapitalize="words"
               />
-              {!isNameValid && formData.cardholderName.length > 0 && (
-                <Text style={styles.errorText}>Nombre inválido</Text>
-              )}
+                             {!isNameValid && formData.cardholderName.length > 0 && (
+                 <Text style={styles.errorText}>El nombre debe tener al menos 5 caracteres</Text>
+               )}
             </View>
 
             {/* Email */}
@@ -1004,6 +1075,17 @@ const styles = StyleSheet.create({
     marginBottom: 32,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  errorDetails: {
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 20,
+  },
+  errorDetailsText: {
+    fontSize: 14,
+    color: colors.error,
+    textAlign: 'center',
+    marginBottom: 4,
   },
   backToHomeButton: {
     backgroundColor: colors.primary,
