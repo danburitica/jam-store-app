@@ -187,18 +187,10 @@ export const PaymentBackdrop: React.FC<PaymentBackdropProps> = ({
 
       console.log('📋 Datos del formulario:', request);
 
-      // Procesar transacción con timeout de seguridad
+      // Procesar transacción
       console.log('🔄 Procesando transacción...', request);
       
-      // Timeout de seguridad (10 segundos)
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout: La transacción tardó demasiado')), 10000);
-      });
-      
-      const result = await Promise.race([
-        processTransactionUseCase.execute(request),
-        timeoutPromise
-      ]) as any;
+      const result = await processTransactionUseCase.execute(request) as any;
       
       console.log('📋 Resultado de transacción:', result);
       
