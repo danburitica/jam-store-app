@@ -1,13 +1,14 @@
 // ==================================================================
 // CONFIGURACIÓN DE ENTORNO - CAPA SHARED
 // ==================================================================
+import { API_BASE_URL, REQUEST_TIMEOUT } from "@env"
 
 export const ENVIRONMENT = {
-  // Cambiar según el entorno
-  API_BASE_URL: 'http://localhost:3000',  // Desarrollo local
+  // URL del backend según entorno
+  API_BASE_URL,
   
   // Timeouts
-  REQUEST_TIMEOUT: 30000, // 30 segundos
+  REQUEST_TIMEOUT: parseInt(REQUEST_TIMEOUT, 10) || 30000,
   
   // Headers por defecto
   DEFAULT_HEADERS: {
