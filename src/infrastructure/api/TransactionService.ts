@@ -37,11 +37,9 @@ export interface TransactionError {
 
 // Clase principal del servicio
 export class TransactionService {
-  private baseUrl: string;
   private timeout: number;
 
   constructor() {
-    this.baseUrl = ENVIRONMENT.API_BASE_URL;
     this.timeout = ENVIRONMENT.REQUEST_TIMEOUT;
   }
 
