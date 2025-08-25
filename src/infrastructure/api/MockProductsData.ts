@@ -78,8 +78,7 @@ export class MockProductRepository {
    * Simula obtener todos los productos de una API
    */
   async getAllProducts(): Promise<Product[]> {
-    // Simular delay de red
-    await new Promise<void>(resolve => setTimeout(() => resolve(), 500));
+    // Retornar productos inmediatamente para testing
     return MOCK_PRODUCTS;
   }
 
@@ -87,8 +86,7 @@ export class MockProductRepository {
    * Simula obtener un producto específico por ID
    */
   async getProductById(id: string): Promise<Product | null> {
-    // Simular delay de red
-    await new Promise<void>(resolve => setTimeout(() => resolve(), 200));
+    // Retornar producto inmediatamente para testing
     return MOCK_PRODUCTS.find(product => product.id === id) || null;
   }
 }
