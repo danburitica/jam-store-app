@@ -1,97 +1,110 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# 🎸 JamStoreApp
 
-# Getting Started
+## Descripción del Proyecto
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+**JamStoreApp** es una aplicación móvil desarrollada en React Native que implementa una tienda virtual de instrumentos musicales. La aplicación está construida siguiendo los principios de **Arquitectura Hexagonal (Clean Architecture)** y utiliza **Redux** para el manejo del estado global.
 
-## Step 1: Start Metro
+### 🏗️ Arquitectura
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+La aplicación está estructurada en capas siguiendo los principios de Clean Architecture:
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- **Domain Layer**: Entidades de negocio (Product, CartItem) y servicios del dominio
+- **Application Layer**: Casos de uso y lógica de aplicación
+- **Infrastructure Layer**: Implementaciones concretas de repositorios y servicios externos
+- **UI Layer**: Componentes React Native y pantallas de la aplicación
+- **State Management**: Redux con Redux Toolkit para manejo del estado global
 
-```sh
-# Using npm
-npm start
+### 🎯 Funcionalidades Principales
 
-# OR using Yarn
-yarn start
+- **Catálogo de Productos**: Visualización de instrumentos musicales con precios en COP
+- **Carrito de Compras**: Gestión de productos seleccionados
+- **Procesamiento de Pagos**: Validación de tarjetas de crédito y procesamiento de transacciones
+- **Navegación Intuitiva**: Sistema de navegación entre pantallas (Splash, Home, Cart)
+- **Validaciones**: Validación de formularios, tarjetas de crédito y datos de entrada
+
+## 🚀 Instrucciones de Ejecución
+
+### Prerrequisitos
+
+- Node.js >= 18
+- React Native CLI
+- Android Studio (para Android) o Xcode (para iOS)
+- CocoaPods (para iOS)
+
+### Instalación
+
+1. **Clonar el repositorio**
+   ```bash
+   git clone <repository-url>
+   cd JamStoreApp
+   ```
+
+2. **Instalar dependencias**
+   ```bash
+   npm install
+   ```
+
+3. **Instalar dependencias de iOS (solo para desarrollo en iOS)**
+   ```bash
+   bundle install
+   bundle exec pod install
+   ```
+
+### Ejecución del Proyecto
+
+1. **Iniciar Metro Bundler**
+   ```bash
+   npm start
+   ```
+
+2. **Ejecutar en Android**
+   ```bash
+   npm run android
+   ```
+
+3. **Ejecutar en iOS**
+   ```bash
+   npm run ios
+   ```
+
+### Comandos Disponibles
+
+- `npm start` - Inicia Metro Bundler
+- `npm run android` - Ejecuta la app en Android
+- `npm run ios` - Ejecuta la app en iOS
+- `npm run lint` - Ejecuta ESLint para verificar el código
+- `npm test` - Ejecuta todos los tests
+- `npm run test:cov` - Ejecuta tests con reporte de cobertura
+
+## 🧪 Testing
+
+### Ejecutar Tests
+
+```bash
+# Ejecutar todos los tests
+npm test
+
+# Ejecutar tests con coverage
+npm run test:cov
 ```
 
-## Step 2: Build and run your app
+## 📊 Cobertura de Código
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+### Estado Actual
+![Test Execution](docs/images/test-execution.png)
 
-### Android
+### Resumen del Coverage
+![Coverage Summary](docs/images/coverage-summary.png)
 
-```sh
-# Using npm
-npm run android
+## 🛠️ Tecnologías Utilizadas
 
-# OR using Yarn
-yarn android
-```
+- **React Native 0.81.0** - Framework de desarrollo móvil
+- **TypeScript 5.8.3** - Tipado estático para JavaScript
+- **Redux Toolkit 2.8.2** - Manejo del estado global
+- **Jest 29.6.3** - Framework de testing
+- **ESLint** - Linting del código
+- **Prettier** - Formateo del código
 
-### iOS
+---
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
-npm run ios
-
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+**Desarrollado con ❤️ usando React Native y Clean Architecture**

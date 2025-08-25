@@ -35,7 +35,7 @@ export const productsReducer = (
       return {
         ...state,
         isLoading: false,
-        items: action.payload,
+        items: action.payload ? [...action.payload] : [], // Validar payload antes de hacer spread
         error: null,
       };
 
